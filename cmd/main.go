@@ -1,16 +1,21 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"net/http"
+	"triple-s/internal/handlers"
+	"triple-s/internal/services"
+	storage2 "triple-s/internal/storage"
 )
 
-func handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hi there, I love %s!", r.URL.Path[1:])
-}
-
 func main() {
-	http.HandleFunc("/", handler)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	storage := storage2.NewBucketStorage("data/buckets.csv")
+
+	service := services.NewBucketService(storage)
+
+	handler := handlers.NewBucketHandler(service)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("PUT /{BucketName}", handler.Create)
+
+	http.ListenAndServe(":8080", mux)
 }
