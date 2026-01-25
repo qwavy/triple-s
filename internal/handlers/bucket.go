@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"errors"
 	"net/http"
 	errors2 "triple-s/internal/errors"
@@ -48,5 +49,15 @@ func (h *BucketHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *BucketHandler) List(w http.ResponseWriter, r *http.Request) {
+	response, _ := h.service.List()
 
+	x, err := xml.MarshalIndent(response, "", "  ")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/xml")
+	// Write
+	w.Write(x)
 }

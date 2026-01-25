@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"os"
+	"time"
 	"triple-s/internal/models"
 )
 
@@ -43,6 +44,7 @@ func (s *BucketStorage) Exists(name string) (bool, error) {
 
 func (s *BucketStorage) Save(b models.Bucket) error {
 	const op = "storage.bucket.Save"
+
 	file, err := os.OpenFile("data/Buckets.csv", os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
@@ -58,4 +60,32 @@ func (s *BucketStorage) Save(b models.Bucket) error {
 	}
 
 	return nil
+}
+
+func (s *BucketStorage) List() ([]models.Bucket, error) {
+	const op = "storage.bucket.List"
+
+	file, err := os.Open(s.filePath)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+
+	records, err := reader.ReadAll()
+
+	var buckets []models.Bucket
+
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	for _, eachrecord := range records {
+		BucketCreationDate, _ := time.Parse(eachrecord[1], eachrecord[1])
+		b := models.Bucket{Name: eachrecord[0], CreationDate: BucketCreationDate}
+
+		buckets = append(buckets, b)
+	}
+
+	return buckets, nil
 }

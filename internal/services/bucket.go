@@ -3,10 +3,16 @@ package services
 import (
 	"fmt"
 	"regexp"
+	"time"
 	"triple-s/internal/errors"
 	"triple-s/internal/models"
 	"triple-s/internal/storage"
 )
+
+type ListAllMyBucketsResult struct {
+	Owner   string
+	Buckets []models.Bucket `xml:"Buckets>Bucket"`
+}
 
 type BucketService struct {
 	storage *storage.BucketStorage
@@ -34,11 +40,24 @@ func (s *BucketService) CreateNewBucket(name string) (models.Bucket, error) {
 		return models.Bucket{}, fmt.Errorf("%s: %w", op, errors.ErrBucketAlreadyExists)
 	}
 
-	newBucket := models.Bucket{Name: name}
+	now := time.Now()
+	newBucket := models.Bucket{Name: name, CreationDate: now}
 
 	if err := s.storage.Save(newBucket); err != nil {
 		return models.Bucket{}, fmt.Errorf("%s: %w", op, err)
 	}
 
 	return newBucket, nil
+}
+
+func (s *BucketService) List() (ListAllMyBucketsResult, error) {
+	const op = "services.bucket.List"
+
+	buckets, err := s.storage.List()
+	if err != nil {
+		return ListAllMyBucketsResult{}, fmt.Errorf("%s: %w", op, err)
+	}
+	response := ListAllMyBucketsResult{"Nursultan", buckets}
+
+	return response, nil
 }
