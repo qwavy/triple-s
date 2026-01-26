@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"time"
-	"triple-s/internal/errors"
+	errors2 "triple-s/internal/errors"
 	"triple-s/internal/models"
 	"triple-s/internal/storage"
 )
@@ -28,7 +28,7 @@ func (s *BucketService) CreateNewBucket(name string) (models.Bucket, error) {
 	const op = "services.bucket.CreateNewBucket"
 
 	if !nameRegex.MatchString(name) {
-		return models.Bucket{}, fmt.Errorf("%s: %w", op, errors.ErrBucketInvalidName)
+		return models.Bucket{}, fmt.Errorf("%s: %w", op, errors2.ErrBucketInvalidName)
 	}
 
 	exists, err := s.storage.Exists(name)
@@ -37,7 +37,7 @@ func (s *BucketService) CreateNewBucket(name string) (models.Bucket, error) {
 		return models.Bucket{}, fmt.Errorf("%s: %w", op, err)
 	}
 	if exists {
-		return models.Bucket{}, fmt.Errorf("%s: %w", op, errors.ErrBucketAlreadyExists)
+		return models.Bucket{}, fmt.Errorf("%s: %w", op, errors2.ErrBucketAlreadyExists)
 	}
 
 	now := time.Now()
@@ -60,4 +60,24 @@ func (s *BucketService) List() (ListAllMyBucketsResult, error) {
 	response := ListAllMyBucketsResult{"Nursultan", buckets}
 
 	return response, nil
+}
+
+func (s *BucketService) Delete(name string) error {
+	const op = "services.bucket.Delete"
+
+	exists, err := s.storage.Exists(name)
+	fmt.Println(exists)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	if !exists {
+		return fmt.Errorf("%s: %w", op, errors2.ErrBucketNotFound)
+	}
+
+	err = s.storage.Delete(name)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
 }

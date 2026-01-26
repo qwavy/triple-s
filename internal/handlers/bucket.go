@@ -7,6 +7,7 @@ import (
 	"net/http"
 	errors2 "triple-s/internal/errors"
 	"triple-s/internal/models"
+	"triple-s/internal/pkg"
 	"triple-s/internal/services"
 )
 
@@ -27,15 +28,13 @@ func (h *BucketHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		if errors.Is(err, errors2.ErrBucketAlreadyExists) {
-			w.WriteHeader(http.StatusConflict)
-			json.NewEncoder(w).Encode(map[string]string{"error": "This name already taken"})
+			pkg.SendJSONMessage(w, http.StatusConflict, "This name already taken")
 
 			return
 		}
 
 		if errors.Is(err, errors2.ErrBucketInvalidName) {
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{"error": "Name should be 3-63 characters, only lowercase letters, numbers, hyphens, and periods"})
+			pkg.SendJSONMessage(w, http.StatusBadRequest, "Name should be 3-63 characters, only lowercase letters, numbers, hyphens, and periods")
 
 			return
 		}
@@ -58,6 +57,20 @@ func (h *BucketHandler) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/xml")
-	// Write
 	w.Write(x)
+}
+
+func (h *BucketHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	bucketName := r.PathValue("BucketName")
+	err := h.service.Delete(bucketName)
+
+	if err != nil {
+		if errors.Is(err, errors2.ErrBucketNotFound) {
+			pkg.SendJSONMessage(w, http.StatusNotFound, "Bucket not found")
+		}
+
+		http.Error(w, "Error", http.StatusInternalServerError)
+		return
+	}
+
 }

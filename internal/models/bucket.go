@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type Bucket struct {
 	Name         string    `xml:"Name"`

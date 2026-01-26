@@ -33,7 +33,6 @@ func (s *BucketStorage) Exists(name string) (bool, error) {
 	}
 
 	for _, eachrecord := range records {
-		fmt.Println(eachrecord)
 		if eachrecord[0] == name {
 			return true, nil
 		}
@@ -74,12 +73,12 @@ func (s *BucketStorage) List() ([]models.Bucket, error) {
 	reader := csv.NewReader(file)
 
 	records, err := reader.ReadAll()
-
-	var buckets []models.Bucket
-
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
+
+	var buckets []models.Bucket
+
 	for _, eachrecord := range records {
 		BucketCreationDate, _ := time.Parse(eachrecord[1], eachrecord[1])
 		b := models.Bucket{Name: eachrecord[0], CreationDate: BucketCreationDate}
@@ -88,4 +87,42 @@ func (s *BucketStorage) List() ([]models.Bucket, error) {
 	}
 
 	return buckets, nil
+}
+
+func (s *BucketStorage) Delete(bucketName string) error {
+	const op = "storage.bucket.Delete"
+
+	file, err := os.Open(s.filePath)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+
+	records, err := reader.ReadAll()
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	file, err = os.Create(s.filePath)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+
+	for _, record := range records {
+		if record[0] != bucketName {
+			err := writer.Write(record)
+			if err != nil {
+				return fmt.Errorf("%s: %w", op, err)
+			}
+		}
+
+	}
+	writer.Flush()
+
+	return nil
 }

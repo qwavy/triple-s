@@ -17,6 +17,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("PUT /{BucketName}", handler.Create)
 	mux.HandleFunc("GET /", handler.List)
+	mux.HandleFunc("DELETE /{BucketName}", handler.Delete)
 
 	http.ListenAndServe(":8080", mux)
 }
