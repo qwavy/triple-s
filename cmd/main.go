@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	bucketStorage := storage2.NewBucketStorage("data/buckets.csv")
+	bucketStorage := storage2.NewBucketStorage("./data/", "data/buckets.csv")
 	bucketService := services.NewBucketService(bucketStorage)
 	bucketHandler := handlers.NewBucketHandler(bucketService)
 
@@ -17,10 +17,10 @@ func main() {
 	mux.HandleFunc("GET /", bucketHandler.List)
 	mux.HandleFunc("DELETE /{BucketName}", bucketHandler.Delete)
 
-	objectStorage := storage2.NewBucketStorage("")
-	objectService := services.NewObjectService(objectStorage, bucketStorage)
+	//objectStorage := storage2.NewBucketStorage("")
+	//objectService := services.NewObjectService(objectStorage, bucketStorage)
 
-	mux.HandleFunc("PUT /{BucketName}/{ObjectKey}")
+	//mux.HandleFunc("PUT /{BucketName}/{ObjectKey}")
 
 	http.ListenAndServe(":8080", mux)
 }

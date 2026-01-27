@@ -2,24 +2,28 @@ package storage
 
 import (
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"os"
 	"time"
+	errors2 "triple-s/internal/errors"
 	"triple-s/internal/models"
+	"triple-s/internal/pkg"
 )
 
 type BucketStorage struct {
-	filePath string
+	filePath            string
+	bucketsInfoFilePath string
 }
 
-func NewBucketStorage(path string) *BucketStorage {
-	return &BucketStorage{filePath: path}
+func NewBucketStorage(filePath, bucketsInfoFilePath string) *BucketStorage {
+	return &BucketStorage{filePath: filePath, bucketsInfoFilePath: bucketsInfoFilePath}
 }
 
 func (s *BucketStorage) Exists(name string) (bool, error) {
 	const op = "storage.bucket.Exists"
 
-	file, err := os.Open(s.filePath)
+	file, err := os.Open(s.bucketsInfoFilePath)
 	if err != nil {
 		return false, fmt.Errorf("%s: %w", op, err)
 	}
@@ -33,6 +37,8 @@ func (s *BucketStorage) Exists(name string) (bool, error) {
 	}
 
 	for _, eachrecord := range records {
+		fmt.Println(eachrecord[0])
+		fmt.Println(name)
 		if eachrecord[0] == name {
 			return true, nil
 		}
@@ -41,22 +47,15 @@ func (s *BucketStorage) Exists(name string) (bool, error) {
 	return false, nil
 }
 
-func (s *BucketStorage) Save(b models.Bucket) error {
+func (s *BucketStorage) Create(b models.Bucket) error {
 	const op = "storage.bucket.Save"
 
-	file, err := os.OpenFile("data/Buckets.csv", os.O_APPEND|os.O_WRONLY, 0644)
+	err := os.Mkdir(s.filePath+b.Name, 0755)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
-	defer file.Close()
 
-	writer := csv.NewWriter(file)
-	defer writer.Flush()
-
-	err = writer.Write([]string{b.Name})
-	if err != nil {
-		return fmt.Errorf("%s: %w", op, err)
-	}
+	pkg.WriteDataToCsv([]string{b.Name}, s.bucketsInfoFilePath)
 
 	return nil
 }
@@ -92,37 +91,44 @@ func (s *BucketStorage) List() ([]models.Bucket, error) {
 func (s *BucketStorage) Delete(bucketName string) error {
 	const op = "storage.bucket.Delete"
 
-	file, err := os.Open(s.filePath)
+	_, err := os.Stat(s.filePath + bucketName)
+	if errors.Is(err, os.ErrNotExist) {
+		return fmt.Errorf("%s: %w", op, errors2.ErrBucketNotEmpty)
+	}
+
+	err = os.Remove(s.filePath + bucketName)
+
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
-	defer file.Close()
-
-	reader := csv.NewReader(file)
-
-	records, err := reader.ReadAll()
-	if err != nil {
-		return fmt.Errorf("%s: %w", op, err)
-	}
-
-	file, err = os.Create(s.filePath)
-	if err != nil {
-		return fmt.Errorf("%s: %w", op, err)
-	}
-	defer file.Close()
-
-	writer := csv.NewWriter(file)
-
-	for _, record := range records {
-		if record[0] != bucketName {
-			err := writer.Write(record)
-			if err != nil {
-				return fmt.Errorf("%s: %w", op, err)
-			}
-		}
-
-	}
-	writer.Flush()
+	//file, err := os.Open(s.filePath)
+	//defer file.Close()
+	//
+	//reader := csv.NewReader(file)
+	//
+	//records, err := reader.ReadAll()
+	//if err != nil {
+	//	return fmt.Errorf("%s: %w", op, err)
+	//}
+	//
+	//file, err = os.Create(s.filePath)
+	//if err != nil {
+	//	return fmt.Errorf("%s: %w", op, err)
+	//}
+	//defer file.Close()
+	//
+	//writer := csv.NewWriter(file)
+	//
+	//for _, record := range records {
+	//	if record[0] != bucketName {
+	//		err := writer.Write(record)
+	//		if err != nil {
+	//			return fmt.Errorf("%s: %w", op, err)
+	//		}
+	//	}
+	//
+	//}
+	//writer.Flush()
 
 	return nil
 }

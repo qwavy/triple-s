@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"net/http"
 	errors2 "triple-s/internal/errors"
 	"triple-s/internal/models"
@@ -38,7 +39,7 @@ func (h *BucketHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 			return
 		}
-
+		fmt.Println(err)
 		http.Error(w, "Error", http.StatusInternalServerError)
 		return
 	}
@@ -68,7 +69,7 @@ func (h *BucketHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, errors2.ErrBucketNotFound) {
 			pkg.SendJSONMessage(w, http.StatusNotFound, "Bucket not found")
 		}
-
+		fmt.Println(err)
 		http.Error(w, "Error", http.StatusInternalServerError)
 		return
 	}

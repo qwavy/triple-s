@@ -43,7 +43,7 @@ func (s *BucketService) CreateNewBucket(name string) (models.Bucket, error) {
 	now := time.Now()
 	newBucket := models.Bucket{Name: name, CreationDate: now}
 
-	if err := s.storage.Save(newBucket); err != nil {
+	if err := s.storage.Create(newBucket); err != nil {
 		return models.Bucket{}, fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -66,14 +66,12 @@ func (s *BucketService) Delete(name string) error {
 	const op = "services.bucket.Delete"
 
 	exists, err := s.storage.Exists(name)
-	fmt.Println(exists)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 	if !exists {
 		return fmt.Errorf("%s: %w", op, errors2.ErrBucketNotFound)
 	}
-
 	err = s.storage.Delete(name)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
