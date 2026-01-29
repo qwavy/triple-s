@@ -91,12 +91,7 @@ func (s *BucketStorage) List() ([]models.Bucket, error) {
 func (s *BucketStorage) Delete(bucketName string) error {
 	const op = "storage.bucket.Delete"
 
-	_, err := os.Stat(s.filePath + bucketName)
-	if errors.Is(err, os.ErrNotExist) {
-		return fmt.Errorf("%s: %w", op, errors2.ErrBucketNotEmpty)
-	}
-
-	err = os.Remove(s.filePath + bucketName)
+	err := os.Remove(s.filePath + bucketName)
 
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
@@ -131,4 +126,14 @@ func (s *BucketStorage) Delete(bucketName string) error {
 	//writer.Flush()
 
 	return nil
+}
+
+func (s *BucketStorage) IsEmpty(bucketName string) (bool, error) {
+	const op = "storage.bucket.IsEmpty"
+	_, err := os.Stat(s.filePath + bucketName)
+	if errors.Is(err, os.ErrNotExist) {
+		return false, fmt.Errorf("%s: %w", op, errors2.ErrBucketNotEmpty)
+	}
+
+	return true, nil
 }

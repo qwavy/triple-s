@@ -72,6 +72,13 @@ func (s *BucketService) Delete(name string) error {
 	if !exists {
 		return fmt.Errorf("%s: %w", op, errors2.ErrBucketNotFound)
 	}
+
+	isEmpty, err := s.storage.IsEmpty(name)
+
+	if !isEmpty {
+
+	}
+
 	err = s.storage.Delete(name)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)

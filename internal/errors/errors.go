@@ -8,4 +8,6 @@ var (
 
 	ErrBucketNotFound = errors.New("bucket not found")
 	ErrBucketNotEmpty = errors.New("bucket not empty")
+
+	ErrObjNotFound = errors.New("object not found")
 )
