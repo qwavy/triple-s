@@ -29,17 +29,16 @@ func (h *BucketHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		if errors.Is(err, errors2.ErrBucketAlreadyExists) {
-			pkg.SendJSONMessage(w, http.StatusConflict, "This name already taken")
+			pkg.SendMessage(w, http.StatusConflict, "This name already taken")
 
 			return
 		}
 
 		if errors.Is(err, errors2.ErrBucketInvalidName) {
-			pkg.SendJSONMessage(w, http.StatusBadRequest, "Name should be 3-63 characters, only lowercase letters, numbers, hyphens, and periods")
+			pkg.SendMessage(w, http.StatusBadRequest, "Name should be 3-63 characters, only lowercase letters, numbers, hyphens, and periods")
 
 			return
 		}
-		fmt.Println(err)
 		http.Error(w, "Error", http.StatusInternalServerError)
 		return
 	}
@@ -67,9 +66,14 @@ func (h *BucketHandler) Delete(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		if errors.Is(err, errors2.ErrBucketNotFound) {
-			pkg.SendJSONMessage(w, http.StatusNotFound, "Bucket not found")
+			pkg.SendMessage(w, http.StatusNotFound, "Bucket not found")
+		}
+
+		if errors.Is(err, errors2.ErrBucketNotEmpty) {
+			pkg.SendMessage(w, http.StatusConflict, "Bucket is not empty")
 		}
 		fmt.Println(err)
+
 		http.Error(w, "Error", http.StatusInternalServerError)
 		return
 	}

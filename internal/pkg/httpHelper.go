@@ -5,8 +5,8 @@ import (
 	"net/http"
 )
 
-func SendJSONMessage(w http.ResponseWriter, status int, msg string) {
-	w.Header().Set("Content-Type", "application/json")
+func SendMessage(w http.ResponseWriter, status int, msg string) {
+	w.Header().Set("Content-Type", "application/xml")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(map[string]string{"error": msg})
 }

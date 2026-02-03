@@ -1,7 +1,10 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"net/http"
+	"os"
 	"triple-s/internal/handlers"
 	"triple-s/internal/services"
 	storage2 "triple-s/internal/storage"
@@ -22,8 +25,17 @@ func main() {
 	objectHandler := handlers.NewObjectHandler(objectService)
 	//objectService := services.NewObjectService(objectStorage, bucketStorage)
 
-	//mux.HandleFunc("PUT /{BucketName}/{ObjectKey}", )
+	mux.HandleFunc("GET /{BucketName}/{ObjectKey}", objectHandler.Get)
+	mux.HandleFunc("PUT /{BucketName}/{ObjectKey}", objectHandler.Create)
 	mux.HandleFunc("DELETE /{BucketName}/{ObjectKey}", objectHandler.Delete)
+
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Использование программы:\n")
+		fmt.Fprintf(os.Stderr, "  myprogram [опции]\n\nОпции:\n")
+		flag.PrintDefaults() // Выводит стандартный список флагов
+	}
+
+	flag.Parse()
 
 	http.ListenAndServe(":8080", mux)
 }

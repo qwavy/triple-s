@@ -2,11 +2,9 @@ package storage
 
 import (
 	"encoding/csv"
-	"errors"
 	"fmt"
 	"os"
 	"time"
-	errors2 "triple-s/internal/errors"
 	"triple-s/internal/models"
 	"triple-s/internal/pkg"
 )
@@ -37,8 +35,6 @@ func (s *BucketStorage) Exists(name string) (bool, error) {
 	}
 
 	for _, eachrecord := range records {
-		fmt.Println(eachrecord[0])
-		fmt.Println(name)
 		if eachrecord[0] == name {
 			return true, nil
 		}
@@ -55,7 +51,9 @@ func (s *BucketStorage) Create(b models.Bucket) error {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	pkg.WriteDataToCsv([]string{b.Name}, s.bucketsInfoFilePath)
+	creationTime := time.Now()
+
+	pkg.WriteDataToCsv([]any{b.Name, creationTime}, s.bucketsInfoFilePath)
 
 	return nil
 }
@@ -130,10 +128,8 @@ func (s *BucketStorage) Delete(bucketName string) error {
 
 func (s *BucketStorage) IsEmpty(bucketName string) (bool, error) {
 	const op = "storage.bucket.IsEmpty"
-	_, err := os.Stat(s.filePath + bucketName)
-	if errors.Is(err, os.ErrNotExist) {
-		return false, fmt.Errorf("%s: %w", op, errors2.ErrBucketNotEmpty)
-	}
+
+	//pkg.ColsEqualValue(s.filePath + bucketName + "/" + "objects.csv")
 
 	return true, nil
 }

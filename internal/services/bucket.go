@@ -7,6 +7,7 @@ import (
 	errors2 "triple-s/internal/errors"
 	"triple-s/internal/models"
 	"triple-s/internal/storage"
+	"triple-s/internal/validator"
 )
 
 type ListAllMyBucketsResult struct {
@@ -27,7 +28,7 @@ func NewBucketService(bucketStorage *storage.BucketStorage) *BucketService {
 func (s *BucketService) CreateNewBucket(name string) (models.Bucket, error) {
 	const op = "services.bucket.CreateNewBucket"
 
-	if !nameRegex.MatchString(name) {
+	if !validator.NameRegex.MatchString(name) {
 		return models.Bucket{}, fmt.Errorf("%s: %w", op, errors2.ErrBucketInvalidName)
 	}
 
@@ -76,9 +77,8 @@ func (s *BucketService) Delete(name string) error {
 	isEmpty, err := s.storage.IsEmpty(name)
 
 	if !isEmpty {
-
+		return fmt.Errorf("%s: %w", op, errors2.ErrBucketNotEmpty)
 	}
-
 	err = s.storage.Delete(name)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
