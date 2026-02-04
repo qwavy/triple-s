@@ -1,23 +1,15 @@
-package storage
+package repository
 
 import (
 	"fmt"
 	"net/http"
 	"os"
-	"triple-s/internal/errors"
+	"triple-s/internal/models"
 	"triple-s/internal/pkg"
 )
 
-type ObjectStorage struct {
-	filePath string
-}
-
-func NewObjectStorage(path string) *ObjectStorage {
-	return &ObjectStorage{filePath: path}
-}
-
-func (s *ObjectStorage) Create(bucketName, objectKey string, content []byte) error {
-	const op = "storage.storage.Create"
+func (s *Store) CreateObject(bucketName, objectKey string, content []byte) error {
+	const op = "repository.repository.Create"
 	err := pkg.OverWriteDataToFile(content, s.filePath+"/"+bucketName+"/"+objectKey)
 
 	if err != nil {
@@ -36,24 +28,24 @@ func (s *ObjectStorage) Create(bucketName, objectKey string, content []byte) err
 	return nil
 }
 
-func (s *ObjectStorage) Exists(bucketName, objectKey string) (bool, error) {
-	const op = "storage.object.Exists"
+func (s *Store) IsExistsObject(bucketName, objectKey string) (bool, error) {
+	const op = "repository.object.Exists"
 
 	bucketExists := pkg.FolderExists(s.filePath + "/" + bucketName)
 	if !bucketExists {
-		return false, errors.ErrBucketNotFound
+		return false, models.ErrBucketNotFound
 	}
 
 	objectExists := pkg.FileExists(s.filePath + "/" + bucketName + "/" + objectKey)
 	if !objectExists {
-		return false, errors.ErrObjNotFound
+		return false, models.ErrObjNotFound
 	}
 
 	return true, nil
 }
 
-func (s *ObjectStorage) Delete(bucketName, objectKey string) error {
-	const op = "storage.object.Delete"
+func (s *Store) DeleteObject(bucketName, objectKey string) error {
+	const op = "repository.object.Delete"
 
 	err := os.Remove(s.filePath + "/" + bucketName + "/" + objectKey)
 	if err != nil {
@@ -63,8 +55,8 @@ func (s *ObjectStorage) Delete(bucketName, objectKey string) error {
 	return nil
 }
 
-func (s *ObjectStorage) Get(bucketName, objectKey string) ([]byte, error) {
-	const op = "storage.object.Get"
+func (s *Store) GetObject(bucketName, objectKey string) ([]byte, error) {
+	const op = "repository.object.Get"
 
 	content, err := pkg.ReadFile(s.filePath + "/" + bucketName + "/" + objectKey)
 	if err != nil {
@@ -72,8 +64,4 @@ func (s *ObjectStorage) Get(bucketName, objectKey string) ([]byte, error) {
 	}
 
 	return content, nil
-}
-
-func (s *ObjectStorage) GetFilePath() string {
-	return s.filePath
 }

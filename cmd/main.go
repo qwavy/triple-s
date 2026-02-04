@@ -6,28 +6,24 @@ import (
 	"net/http"
 	"os"
 	"triple-s/internal/handlers"
+	"triple-s/internal/middleware"
+	storage2 "triple-s/internal/repository"
 	"triple-s/internal/services"
-	storage2 "triple-s/internal/storage"
 )
 
 func main() {
-	bucketStorage := storage2.NewBucketStorage("./data/", "data/buckets.csv")
-	bucketService := services.NewBucketService(bucketStorage)
-	bucketHandler := handlers.NewBucketHandler(bucketService)
+	storage := storage2.NewStore("./data/", "buckets.csv")
+	service := services.NewService(storage)
+	handler := handlers.NewHandler(service)
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("PUT /{BucketName}", bucketHandler.Create)
-	mux.HandleFunc("GET /", bucketHandler.List)
-	mux.HandleFunc("DELETE /{BucketName}", bucketHandler.Delete)
+	mux.HandleFunc("PUT /{BucketName}", handler.CreateBucket)
+	mux.HandleFunc("GET /", handler.ListBucket)
+	mux.HandleFunc("DELETE /{BucketName}", handler.DeleteBucket)
 
-	objectStorage := storage2.NewObjectStorage("./data")
-	objectService := services.NewObjectService(objectStorage, bucketStorage)
-	objectHandler := handlers.NewObjectHandler(objectService)
-	//objectService := services.NewObjectService(objectStorage, bucketStorage)
-
-	mux.HandleFunc("GET /{BucketName}/{ObjectKey}", objectHandler.Get)
-	mux.HandleFunc("PUT /{BucketName}/{ObjectKey}", objectHandler.Create)
-	mux.HandleFunc("DELETE /{BucketName}/{ObjectKey}", objectHandler.Delete)
+	mux.HandleFunc("GET /{BucketName}/{ObjectKey}", handler.GetObject)
+	mux.HandleFunc("PUT /{BucketName}/{ObjectKey}", handler.CreateObject)
+	mux.HandleFunc("DELETE /{BucketName}/{ObjectKey}", handler.DeleteObject)
 
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Использование программы:\n")
@@ -37,5 +33,6 @@ func main() {
 
 	flag.Parse()
 
-	http.ListenAndServe(":8080", mux)
+	wrappedMux := middleware.Logger(mux)
+	http.ListenAndServe(":8080", wrappedMux)
 }

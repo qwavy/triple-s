@@ -2,84 +2,65 @@ package services
 
 import (
 	"fmt"
-	"regexp"
-	"time"
-	errors2 "triple-s/internal/errors"
 	"triple-s/internal/models"
-	"triple-s/internal/storage"
+	"triple-s/internal/pkg"
 	"triple-s/internal/validator"
 )
 
-type ListAllMyBucketsResult struct {
-	Owner   string
-	Buckets []models.Bucket `xml:"Buckets>Bucket"`
-}
-
-type BucketService struct {
-	storage *storage.BucketStorage
-}
-
-var nameRegex = regexp.MustCompile(`^[a-z0-9.-]{3,63}$`)
-
-func NewBucketService(bucketStorage *storage.BucketStorage) *BucketService {
-	return &BucketService{storage: bucketStorage}
-}
-
-func (s *BucketService) CreateNewBucket(name string) (models.Bucket, error) {
+func (s *Service) CreateNewBucket(name string) (models.Bucket, error) {
 	const op = "services.bucket.CreateNewBucket"
 
 	if !validator.NameRegex.MatchString(name) {
-		return models.Bucket{}, fmt.Errorf("%s: %w", op, errors2.ErrBucketInvalidName)
+		return models.Bucket{}, fmt.Errorf("%s: %w", op, models.ErrBucketInvalidName)
 	}
 
-	exists, err := s.storage.Exists(name)
+	exists, err := s.store.IsExistsBucket(name)
 
 	if err != nil {
 		return models.Bucket{}, fmt.Errorf("%s: %w", op, err)
 	}
 	if exists {
-		return models.Bucket{}, fmt.Errorf("%s: %w", op, errors2.ErrBucketAlreadyExists)
+		return models.Bucket{}, fmt.Errorf("%s: %w", op, models.ErrBucketAlreadyExists)
 	}
 
-	now := time.Now()
+	now := pkg.GetTodayDate()
 	newBucket := models.Bucket{Name: name, CreationDate: now}
-
-	if err := s.storage.Create(newBucket); err != nil {
+	if err := s.store.CreateBucket(newBucket); err != nil {
 		return models.Bucket{}, fmt.Errorf("%s: %w", op, err)
 	}
 
 	return newBucket, nil
 }
 
-func (s *BucketService) List() (ListAllMyBucketsResult, error) {
+func (s *Service) ListBucket() (models.ListAllMyBucketsResult, error) {
 	const op = "services.bucket.List"
 
-	buckets, err := s.storage.List()
+	buckets, err := s.store.ListBucket()
 	if err != nil {
-		return ListAllMyBucketsResult{}, fmt.Errorf("%s: %w", op, err)
+		return models.ListAllMyBucketsResult{}, fmt.Errorf("%s: %w", op, err)
 	}
-	response := ListAllMyBucketsResult{"Nursultan", buckets}
+	response := models.ListAllMyBucketsResult{"Nursultan", buckets}
 
 	return response, nil
 }
 
-func (s *BucketService) Delete(name string) error {
+func (s *Service) DeleteBucket(name string) error {
 	const op = "services.bucket.Delete"
 
-	exists, err := s.storage.Exists(name)
+	exists, err := s.store.IsExistsBucket(name)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 	if !exists {
-		return fmt.Errorf("%s: %w", op, errors2.ErrBucketNotFound)
+		return fmt.Errorf("%s: %w", op, models.ErrBucketNotFound)
 	}
 
-	isEmpty, err := s.storage.IsEmpty(name)
+	isEmpty, err := s.store.IsEmptyBucket(name)
 
 	if !isEmpty {
-		return fmt.Errorf("%s: %w", op, errors2.ErrBucketNotEmpty)
+		return fmt.Errorf("%s: %w", op, models.ErrBucketNotEmpty)
 	}
-	err = s.storage.Delete(name)
+	err = s.store.DeleteBucket(name)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}

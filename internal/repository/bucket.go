@@ -1,4 +1,4 @@
-package storage
+package repository
 
 import (
 	"encoding/csv"
@@ -9,19 +9,10 @@ import (
 	"triple-s/internal/pkg"
 )
 
-type BucketStorage struct {
-	filePath            string
-	bucketsInfoFilePath string
-}
+func (s *Store) IsExistsBucket(name string) (bool, error) {
+	const op = "repository.bucket.Exists"
 
-func NewBucketStorage(filePath, bucketsInfoFilePath string) *BucketStorage {
-	return &BucketStorage{filePath: filePath, bucketsInfoFilePath: bucketsInfoFilePath}
-}
-
-func (s *BucketStorage) Exists(name string) (bool, error) {
-	const op = "storage.bucket.Exists"
-
-	file, err := os.Open(s.bucketsInfoFilePath)
+	file, err := os.Open(s.filePath + s.bucketsInfoFilePath)
 	if err != nil {
 		return false, fmt.Errorf("%s: %w", op, err)
 	}
@@ -43,8 +34,8 @@ func (s *BucketStorage) Exists(name string) (bool, error) {
 	return false, nil
 }
 
-func (s *BucketStorage) Create(b models.Bucket) error {
-	const op = "storage.bucket.Save"
+func (s *Store) CreateBucket(b models.Bucket) error {
+	const op = "repository.bucket.Save"
 
 	err := os.Mkdir(s.filePath+b.Name, 0755)
 	if err != nil {
@@ -58,8 +49,8 @@ func (s *BucketStorage) Create(b models.Bucket) error {
 	return nil
 }
 
-func (s *BucketStorage) List() ([]models.Bucket, error) {
-	const op = "storage.bucket.List"
+func (s *Store) ListBucket() ([]models.Bucket, error) {
+	const op = "repository.bucket.List"
 
 	file, err := os.Open(s.filePath)
 	if err != nil {
@@ -77,8 +68,7 @@ func (s *BucketStorage) List() ([]models.Bucket, error) {
 	var buckets []models.Bucket
 
 	for _, eachrecord := range records {
-		BucketCreationDate, _ := time.Parse(eachrecord[1], eachrecord[1])
-		b := models.Bucket{Name: eachrecord[0], CreationDate: BucketCreationDate}
+		b := models.Bucket{Name: eachrecord[0], CreationDate: eachrecord[1]}
 
 		buckets = append(buckets, b)
 	}
@@ -86,8 +76,8 @@ func (s *BucketStorage) List() ([]models.Bucket, error) {
 	return buckets, nil
 }
 
-func (s *BucketStorage) Delete(bucketName string) error {
-	const op = "storage.bucket.Delete"
+func (s *Store) DeleteBucket(bucketName string) error {
+	const op = "repository.bucket.Delete"
 
 	err := os.Remove(s.filePath + bucketName)
 
@@ -126,8 +116,8 @@ func (s *BucketStorage) Delete(bucketName string) error {
 	return nil
 }
 
-func (s *BucketStorage) IsEmpty(bucketName string) (bool, error) {
-	const op = "storage.bucket.IsEmpty"
+func (s *Store) IsEmptyBucket(bucketName string) (bool, error) {
+	const op = "repository.bucket.IsEmpty"
 
 	//pkg.ColsEqualValue(s.filePath + bucketName + "/" + "objects.csv")
 
