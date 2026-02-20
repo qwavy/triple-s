@@ -20,18 +20,16 @@ func (s *Service) CreateObject(bucketName, objectKey string, content []byte) err
 		return fmt.Errorf("%s: %w", op, models.ErrBucketNotFound)
 	}
 
-	if !validator.NameRegex.MatchString(objectKey) {
-		return fmt.Errorf("%s: %w", op, models.ErrBucketInvalidName)
-	}
-
+	err = validator.ValidateName(objectKey)
 	if err != nil {
-		return fmt.Errorf("%s: %w", op, err)
+		return fmt.Errorf("%s: %w", op, models.ErrBucketInvalidName)
 	}
 
 	err = s.store.CreateObject(bucketName, objectKey, content)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
+
 	return nil
 }
 

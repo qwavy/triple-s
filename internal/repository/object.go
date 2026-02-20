@@ -9,6 +9,9 @@ import (
 )
 
 func (s *Store) CreateObject(bucketName, objectKey string, content []byte) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	const op = "repository.repository.Create"
 	err := pkg.OverWriteDataToFile(content, s.filePath+"/"+bucketName+"/"+objectKey)
 
@@ -18,10 +21,13 @@ func (s *Store) CreateObject(bucketName, objectKey string, content []byte) error
 
 	contentType := http.DetectContentType(content)
 
-	todayDate := pkg.GetTodayDate()
+	todayDate := pkg.GetTime()
 	err = pkg.WriteDataToCsv([]any{objectKey, contentType, len(content), todayDate}, s.filePath+"/"+bucketName+"/"+"objects.csv")
 
 	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	if err := s.LastModificationTime(bucketName); err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -30,6 +36,13 @@ func (s *Store) CreateObject(bucketName, objectKey string, content []byte) error
 
 func (s *Store) IsExistsObject(bucketName, objectKey string) (bool, error) {
 	const op = "repository.object.Exists"
+
+	//filePathCsv := filepath.Join(s.filePath, "buckets.csv")
+	//bucketCsv := pkg.FileExists(filePathCsv)
+	//
+	//if !bucketCsv {
+	//
+	//}
 
 	bucketExists := pkg.FolderExists(s.filePath + "/" + bucketName)
 	if !bucketExists {
@@ -45,17 +58,23 @@ func (s *Store) IsExistsObject(bucketName, objectKey string) (bool, error) {
 }
 
 func (s *Store) DeleteObject(bucketName, objectKey string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	const op = "repository.object.Delete"
 
 	err := os.Remove(s.filePath + "/" + bucketName + "/" + objectKey)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
-
+	if err := s.LastModificationTime(bucketName); err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
 	return nil
 }
 
 func (s *Store) GetObject(bucketName, objectKey string) ([]byte, error) {
+
 	const op = "repository.object.Get"
 
 	content, err := pkg.ReadFile(s.filePath + "/" + bucketName + "/" + objectKey)

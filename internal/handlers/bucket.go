@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"encoding/xml"
 	"net/http"
 	"triple-s/internal/models"
 	"triple-s/internal/pkg"
@@ -24,15 +23,18 @@ func (h *Handler) CreateBucket(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) ListBucket(w http.ResponseWriter, r *http.Request) {
-	response, _ := h.service.ListBucket()
+	response, err := h.service.ListBucket()
 
-	x, err := xml.MarshalIndent(response, "", "  ")
 	if err != nil {
 		pkg.SendError(w, err)
 		return
 	}
 
-	pkg.SendMessage(w, http.StatusOK, x)
+	if err != nil {
+		pkg.SendError(w, err)
+		return
+	}
+	pkg.SendMessage(w, http.StatusOK, response)
 }
 
 func (h *Handler) DeleteBucket(w http.ResponseWriter, r *http.Request) {

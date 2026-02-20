@@ -4,14 +4,17 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
-	"os"
 	"triple-s/internal/handlers"
 	"triple-s/internal/middleware"
 	storage2 "triple-s/internal/repository"
 	"triple-s/internal/services"
+
+	"github.com/rs/cors"
 )
 
 func main() {
+	flag.Parse()
+
 	storage := storage2.NewStore("./data/", "buckets.csv")
 	service := services.NewService(storage)
 	handler := handlers.NewHandler(service)
@@ -26,13 +29,29 @@ func main() {
 	mux.HandleFunc("DELETE /{BucketName}/{ObjectKey}", handler.DeleteObject)
 
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Использование программы:\n")
-		fmt.Fprintf(os.Stderr, "  myprogram [опции]\n\nОпции:\n")
-		flag.PrintDefaults() // Выводит стандартный список флагов
+		fmt.Println(`Simple Storage Service.
+
+**Usage:**
+    triple-s [-port <N>] [-dir <S>]  
+    triple-s --help
+
+**Options:**
+- --help     Show this screen.
+- --port N   Port number
+- --dir S    Path to the directory`)
+		flag.PrintDefaults()
 	}
 
 	flag.Parse()
 
-	wrappedMux := middleware.Logger(mux)
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:5173"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"*"},
+		AllowCredentials: true,
+	})
+
+	corsHandler := c.Handler(mux)
+	wrappedMux := middleware.Logger(corsHandler)
 	http.ListenAndServe(":8080", wrappedMux)
 }

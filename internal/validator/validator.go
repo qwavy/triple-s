@@ -8,7 +8,7 @@ import (
 
 var NameRegex = regexp.MustCompile(`^[a-z0-9.-]{3,63}$`)
 
-func ValidateBucketName(name string) error {
+func ValidateName(name string) error {
 	if len(name) < 3 || len(name) > 63 {
 		return errors.New("bucket name must be between 3 and 63 characters long")
 	}

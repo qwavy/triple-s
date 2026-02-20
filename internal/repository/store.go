@@ -1,6 +1,9 @@
 package repository
 
+import "sync"
+
 type Store struct {
+	mu                  sync.Mutex
 	filePath            string
 	bucketsInfoFilePath string
 }

@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"time"
 )
 
 var (
@@ -12,11 +13,13 @@ var (
 )
 
 type Bucket struct {
-	Name         string `xml:"Name"`
-	CreationDate string `xml:"CreationDate"`
+	Name         string    `xml:"Name"`
+	CreationDate string    `xml:"CreationDate"`
+	LastModified time.Time `xml:"LastModified"`
+	Status       string    `xml:"Status"`
 }
 
-type ListAllMyBucketsResult struct {
-	Owner   string
+type BucketsResult struct {
+	Owner   string   `xml:"Owner"`
 	Buckets []Bucket `xml:"Buckets>Bucket"`
 }

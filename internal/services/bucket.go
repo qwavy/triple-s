@@ -23,7 +23,7 @@ func (s *Service) CreateNewBucket(name string) (models.Bucket, error) {
 		return models.Bucket{}, fmt.Errorf("%s: %w", op, models.ErrBucketAlreadyExists)
 	}
 
-	now := pkg.GetTodayDate()
+	now := pkg.GetTime()
 	newBucket := models.Bucket{Name: name, CreationDate: now}
 	if err := s.store.CreateBucket(newBucket); err != nil {
 		return models.Bucket{}, fmt.Errorf("%s: %w", op, err)
@@ -32,15 +32,15 @@ func (s *Service) CreateNewBucket(name string) (models.Bucket, error) {
 	return newBucket, nil
 }
 
-func (s *Service) ListBucket() (models.ListAllMyBucketsResult, error) {
+func (s *Service) ListBucket() (*models.BucketsResult, error) {
 	const op = "services.bucket.List"
 
 	buckets, err := s.store.ListBucket()
 	if err != nil {
-		return models.ListAllMyBucketsResult{}, fmt.Errorf("%s: %w", op, err)
+		return &models.BucketsResult{}, fmt.Errorf("%s: %w", op, err)
 	}
-	response := models.ListAllMyBucketsResult{"Nursultan", buckets}
-
+	response := &models.BucketsResult{"Nursultan", buckets}
+	fmt.Println(response)
 	return response, nil
 }
 

@@ -2,9 +2,9 @@ package pkg
 
 import "time"
 
-func GetTodayDate() string {
+func GetTime() string {
 	currentTime := time.Now()
-	formattedDate := currentTime.Format("2006-01-02")
+	formattedDate := currentTime.Format(time.RFC3339)
 
 	return formattedDate
 }
