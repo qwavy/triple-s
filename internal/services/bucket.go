@@ -24,7 +24,7 @@ func (s *Service) CreateNewBucket(name string) (models.Bucket, error) {
 	}
 
 	now := pkg.GetTime()
-	newBucket := models.Bucket{Name: name, CreationDate: now}
+	newBucket := models.Bucket{Name: name, CreationDate: now, LastModified: now, Status: "active"}
 	if err := s.store.CreateBucket(newBucket); err != nil {
 		return models.Bucket{}, fmt.Errorf("%s: %w", op, err)
 	}

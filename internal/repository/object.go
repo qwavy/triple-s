@@ -37,13 +37,6 @@ func (s *Store) CreateObject(bucketName, objectKey string, content []byte) error
 func (s *Store) IsExistsObject(bucketName, objectKey string) (bool, error) {
 	const op = "repository.object.Exists"
 
-	//filePathCsv := filepath.Join(s.filePath, "buckets.csv")
-	//bucketCsv := pkg.FileExists(filePathCsv)
-	//
-	//if !bucketCsv {
-	//
-	//}
-
 	bucketExists := pkg.FolderExists(s.filePath + "/" + bucketName)
 	if !bucketExists {
 		return false, models.ErrBucketNotFound

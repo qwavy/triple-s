@@ -51,7 +51,7 @@ func (s *Store) CreateBucket(b models.Bucket) error {
 	}
 
 	creationTime := pkg.GetTime()
-	err = pkg.WriteDataToCsv([]any{b.Name, creationTime}, filePathCsv)
+	err = pkg.WriteDataToCsv([]any{b.Name, creationTime, "active"}, filePathCsv)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
