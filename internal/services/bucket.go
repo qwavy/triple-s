@@ -15,7 +15,6 @@ func (s *Service) CreateNewBucket(name string) (models.Bucket, error) {
 	}
 
 	exists, err := s.store.IsExistsBucket(name)
-
 	if err != nil {
 		return models.Bucket{}, fmt.Errorf("%s: %w", op, err)
 	}
@@ -25,6 +24,7 @@ func (s *Service) CreateNewBucket(name string) (models.Bucket, error) {
 
 	now := pkg.GetTime()
 	newBucket := models.Bucket{Name: name, CreationDate: now, LastModified: now, Status: "active"}
+
 	if err := s.store.CreateBucket(newBucket); err != nil {
 		return models.Bucket{}, fmt.Errorf("%s: %w", op, err)
 	}
@@ -39,8 +39,9 @@ func (s *Service) ListBucket() (*models.BucketsResult, error) {
 	if err != nil {
 		return &models.BucketsResult{}, fmt.Errorf("%s: %w", op, err)
 	}
-	response := &models.BucketsResult{"Nursultan", buckets}
-	fmt.Println(response)
+
+	response := &models.BucketsResult{Owner: "Nursultan", Buckets: buckets}
+
 	return response, nil
 }
 
@@ -56,10 +57,13 @@ func (s *Service) DeleteBucket(name string) error {
 	}
 
 	isEmpty, err := s.store.IsEmptyBucket(name)
-
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
 	if !isEmpty {
 		return fmt.Errorf("%s: %w", op, models.ErrBucketNotEmpty)
 	}
+
 	err = s.store.DeleteBucket(name)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)

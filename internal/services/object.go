@@ -11,11 +11,9 @@ func (s *Service) CreateObject(bucketName, objectKey string, content []byte) err
 	const op = "services.object.CreateNewObject"
 
 	bucketExists, err := s.store.IsExistsBucket(bucketName)
-
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
-
 	if !bucketExists {
 		return fmt.Errorf("%s: %w", op, models.ErrBucketNotFound)
 	}
@@ -45,7 +43,6 @@ func (s *Service) DeleteObject(bucketName, objectKey string) error {
 	}
 
 	err = s.store.DeleteObject(bucketName, objectKey)
-
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -55,36 +52,37 @@ func (s *Service) DeleteObject(bucketName, objectKey string) error {
 
 func (s *Service) GetObject(bucketName, objectKey string) ([]byte, string, error) {
 	const op = "services.object.Get"
-	bucketExists, err := s.store.IsExistsBucket(bucketName)
 
+	bucketExists, err := s.store.IsExistsBucket(bucketName)
 	if err != nil {
 		return nil, "", fmt.Errorf("%s: %w", op, err)
 	}
-
 	if !bucketExists {
 		return nil, "", fmt.Errorf("%s: %w", op, models.ErrBucketNotFound)
 	}
 
 	objectExists, err := s.store.IsExistsObject(bucketName, objectKey)
-
 	if err != nil {
 		return nil, "", fmt.Errorf("%s: %w", op, err)
 	}
-
 	if !objectExists {
 		return nil, "", fmt.Errorf("%s: %w", op, models.ErrObjNotFound)
 	}
 
 	content, err := s.store.GetObject(bucketName, objectKey)
-
 	if err != nil {
 		return nil, "", fmt.Errorf("%s: %w", op, err)
 	}
 
-	contentType, err := pkg.FindRowCsvByName(objectKey, 0, s.store.GetFilePath()+"/"+bucketName+"/"+"objects.csv")
-
+	csvRow, err := pkg.FindRowCsvByName(objectKey, 0, s.store.GetFilePath()+"/"+bucketName+"/"+"objects.csv")
 	if err != nil {
 		return nil, "", fmt.Errorf("%s: %w", op, err)
 	}
-	return content, contentType[1], nil
+
+	contentType := "application/octet-stream"
+	if len(csvRow) > 1 {
+		contentType = csvRow[1]
+	}
+
+	return content, contentType, nil
 }

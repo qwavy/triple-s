@@ -13,13 +13,16 @@ func (h *Handler) CreateObject(w http.ResponseWriter, r *http.Request) {
 	content, err := io.ReadAll(r.Body)
 	if err != nil {
 		pkg.SendError(w, err)
+		return
 	}
 
 	err = h.service.CreateObject(bucketName, objectKey, content)
-
 	if err != nil {
 		pkg.SendError(w, err)
+		return
 	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func (h *Handler) DeleteObject(w http.ResponseWriter, r *http.Request) {
@@ -27,9 +30,9 @@ func (h *Handler) DeleteObject(w http.ResponseWriter, r *http.Request) {
 	objectKey := r.PathValue("ObjectKey")
 
 	err := h.service.DeleteObject(bucketName, objectKey)
-
 	if err != nil {
 		pkg.SendError(w, err)
+		return
 	}
 
 	w.WriteHeader(http.StatusNoContent)
@@ -40,9 +43,9 @@ func (h *Handler) GetObject(w http.ResponseWriter, r *http.Request) {
 	objectKey := r.PathValue("ObjectKey")
 
 	content, contentType, err := h.service.GetObject(bucketName, objectKey)
-
 	if err != nil {
 		pkg.SendError(w, err)
+		return
 	}
 
 	w.Header().Set("Content-Type", contentType)

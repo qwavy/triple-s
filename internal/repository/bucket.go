@@ -51,7 +51,7 @@ func (s *Store) CreateBucket(b models.Bucket) error {
 	}
 
 	creationTime := pkg.GetTime()
-	err = pkg.WriteDataToCsv([]any{b.Name, creationTime, "active"}, filePathCsv)
+	err = pkg.WriteDataToCsv([]any{b.Name, creationTime, creationTime, "active"}, filePathCsv)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -93,57 +93,66 @@ func (s *Store) DeleteBucket(bucketName string) error {
 	defer s.mu.Unlock()
 
 	const op = "repository.bucket.Delete"
-
 	filePathCsv := filepath.Join(s.filePath, "buckets.csv")
 
-	err := os.Remove(filePathCsv)
-
-	if err != nil {
-		return fmt.Errorf("%s: %w", op, err)
-	}
-
 	file, err := os.Open(filePathCsv)
-
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
-
-	defer file.Close()
-
 	reader := csv.NewReader(file)
 	records, err := reader.ReadAll()
+	file.Close() // Закрываем сразу после чтения
+
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	file, err = os.Create(filePathCsv + ".tmp")
+	tmpFile, err := os.Create(filePathCsv + ".tmp")
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
-	defer file.Close()
 
-	writer := csv.NewWriter(file)
-
+	writer := csv.NewWriter(tmpFile)
 	for _, record := range records {
 		if record[0] != bucketName {
-			err := writer.Write(record)
-			if err != nil {
+			if err := writer.Write(record); err != nil {
+				tmpFile.Close()
 				return fmt.Errorf("%s: %w", op, err)
 			}
 		}
-
 	}
 	writer.Flush()
+	tmpFile.Close()
 
-	return os.Rename(filePathCsv+".tmp", filePathCsv)
+	if err := os.Rename(filePathCsv+".tmp", filePathCsv); err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	bucketPath := filepath.Join(s.filePath, bucketName)
+	return os.RemoveAll(bucketPath)
 }
 
 func (s *Store) IsEmptyBucket(bucketName string) (bool, error) {
 	const op = "repository.bucket.IsEmpty"
 
-	//pkg.ColsEqualValue(s.filePath + bucketName + "/" + "objects.csv")
+	objectsCsvPath := filepath.Join(s.filePath, bucketName, "objects.csv")
 
-	return true, nil
+	file, err := os.Open(objectsCsvPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return true, nil
+		}
+		return false, fmt.Errorf("%s: %w", op, err)
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
+	if err != nil {
+		return false, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return len(records) == 0, nil
 }
 
 func (s *Store) LastModificationTime(bucketName string) error {
