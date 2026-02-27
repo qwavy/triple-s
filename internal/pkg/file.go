@@ -30,7 +30,7 @@ func FolderExists(path string) bool {
 }
 
 func WriteDataToCsv(data []any, filePath string) error {
-	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0o644)
 	if err != nil {
 		return err
 	}
@@ -49,8 +49,7 @@ func WriteDataToCsv(data []any, filePath string) error {
 }
 
 func WriteDataToFile(content []byte, filePath string) error {
-	f, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-
+	f, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
 		return err
 	}
@@ -66,8 +65,7 @@ func WriteDataToFile(content []byte, filePath string) error {
 }
 
 func OverWriteDataToFile(content []byte, filePath string) error {
-	f, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
-
+	f, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o755)
 	if err != nil {
 		return err
 	}
@@ -84,7 +82,6 @@ func OverWriteDataToFile(content []byte, filePath string) error {
 
 func ReadFile(filePath string) ([]byte, error) {
 	result, err := os.ReadFile(filePath)
-
 	if err != nil {
 		return nil, err
 	}

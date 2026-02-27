@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+
 	"triple-s/internal/pkg"
 )
 
@@ -99,7 +100,6 @@ func (s *Store) DeleteObject(bucketName, objectKey string) error {
 }
 
 func (s *Store) GetObject(bucketName, objectKey string) ([]byte, error) {
-
 	const op = "repository.object.Get"
 
 	content, err := pkg.ReadFile(s.filePath + "/" + bucketName + "/" + objectKey)
@@ -111,7 +111,6 @@ func (s *Store) GetObject(bucketName, objectKey string) ([]byte, error) {
 }
 
 func (s *Store) IsExistsObject(bucketName, objectKey string) (bool, error) {
-
 	bucketExists := pkg.FolderExists(s.filePath + "/" + bucketName)
 	if !bucketExists {
 		return false, nil

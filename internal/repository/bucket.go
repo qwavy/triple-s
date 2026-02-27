@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
 	"triple-s/internal/models"
 	"triple-s/internal/pkg"
 )
@@ -45,7 +46,7 @@ func (s *Store) CreateBucket(b models.Bucket) error {
 	filePathCsv := filepath.Join(s.filePath, "buckets.csv")
 	bucketPath := s.filePath + b.Name
 
-	err := os.Mkdir(bucketPath, 0755)
+	err := os.Mkdir(bucketPath, 0o755)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -161,7 +162,6 @@ func (s *Store) LastModificationTime(bucketName string) error {
 	filePathCSV := "./data/buckets.csv"
 
 	file, err := os.Open(filePathCSV)
-
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -196,7 +196,6 @@ func (s *Store) LastModificationTime(bucketName string) error {
 				return fmt.Errorf("%s: %w", op, err)
 			}
 		}
-
 	}
 	writer.Flush()
 
